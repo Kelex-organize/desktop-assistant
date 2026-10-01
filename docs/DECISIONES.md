@@ -68,3 +68,8 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 
 ## 016 · Nombre
 - **Decisión:** el asistente se llama **Kai** (provisorio). El repo usa un nombre neutro (`desktop-assistant`) hasta decidir el definitivo.
+
+## 017 · Licencia MIT
+- **Decisión:** el código se publica bajo la licencia MIT, con copyright a nombre de Emanuel Laguna.
+- **Por qué:** quiero que cualquiera pueda usar el código y modificarlo, sin más condición que conservar el aviso de copyright. MIT es la más simple y común para este tipo de proyecto.
+- **Alternativas:** Apache-2.0 (agrega una cláusula explícita de patentes, innecesaria acá); GPL (obliga a que las versiones derivadas también sean abiertas, más restrictiva de lo que busco).

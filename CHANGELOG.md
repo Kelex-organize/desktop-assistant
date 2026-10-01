@@ -13,3 +13,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Test setup: `cargo test` for Rust and Vitest for TypeScript
 - CI with GitHub Actions on Windows (Rust checks, frontend checks and a Tauri build)
 - Project documentation in `docs/`
+- MIT license

@@ -91,4 +91,4 @@ The project documentation lives in [`docs/`](docs/) and is written in Spanish:
 
 ## License
 
-Not decided yet.
+[MIT](LICENSE). You are free to use, copy, modify and redistribute this code, as long as you keep the copyright notice.
