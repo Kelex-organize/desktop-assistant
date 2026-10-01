@@ -18,7 +18,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn greet_test() {
+    fn greet_includes_the_name() {
         let result = greet("Emanuel");
         assert!(result.contains("Emanuel"), "unexpected greeting: {result}");
     }

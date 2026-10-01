@@ -6,7 +6,7 @@ describe("capitalize", () => {
     expect(capitalize("emanuel")).toBe("Emanuel");
   });
 
-  it("upercase the empty string", () => {
+  it("returns an empty string for empty input", () => {
     expect(capitalize("")).toBe("");
   });
 });
