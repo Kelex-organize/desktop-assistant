@@ -73,3 +73,9 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Decisión:** el código se publica bajo la licencia MIT, con copyright a nombre de Emanuel Laguna.
 - **Por qué:** quiero que cualquiera pueda usar el código y modificarlo, sin más condición que conservar el aviso de copyright. MIT es la más simple y común para este tipo de proyecto.
 - **Alternativas:** Apache-2.0 (agrega una cláusula explícita de patentes, innecesaria acá); GPL (obliga a que las versiones derivadas también sean abiertas, más restrictiva de lo que busco).
+
+## 018 · Diseño del registro de comandos
+- **Decisión:** cada comando guarda su función como `Box<dyn Fn(Value) -> Result<CommandOutput, CommandError> + Send + Sync>`; los parámetros se validan contra su JSON Schema con el crate `jsonschema` (sin features por defecto); los errores son un `enum` con `thiserror`.
+- **Por qué:** los módulos van a necesitar compartir estado (base de datos, `AppHandle`), y un closure puede capturarlo, a diferencia de un puntero a función. El esquema es una única fuente de verdad: valida las llamadas ahora y se le enviará a la IA después. `thiserror` es lo idiomático para errores tipados en Rust.
+- **Por qué sin features por defecto:** `jsonschema` trae por defecto un cliente HTTP y TLS que no hacen falta, alargan la compilación y permitirían que un esquema descargue referencias de internet. Todo debe funcionar sin red.
+- **Alternativas:** puntero a función `fn(...)` (más simple, sin estado); validación a mano (sin dependencias, pero el esquema y la validación pueden desincronizarse); `impl Display` a mano para los errores.
