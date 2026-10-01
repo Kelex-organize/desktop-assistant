@@ -6,11 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-01
+
 ### Added
 
 - Project scaffold with Tauri 2, React and TypeScript
 - Linters and formatters: rustfmt, clippy, ESLint and Prettier
 - Test setup: `cargo test` for Rust and Vitest for TypeScript
 - CI with GitHub Actions on Windows (Rust checks, frontend checks and a Tauri build)
+- Shared VS Code workspace settings and recommended extensions
 - Project documentation in `docs/`
+- README
 - MIT license
+
+[Unreleased]: https://github.com/Kelex-organize/desktop-assistant/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Kelex-organize/desktop-assistant/releases/tag/v0.1.0
