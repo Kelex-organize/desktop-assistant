@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{hash_map::Entry, HashMap};
 
 use serde_json::Value;
 use thiserror::Error;
@@ -55,8 +55,6 @@ impl Command {
 /// Central list of commands, indexed by name.
 #[derive(Default)]
 pub struct Registry {
-    // TODO(#10): remove the `allow` once `register`/`get`/`run` use this field.
-    #[allow(dead_code)]
     commands: HashMap<String, Command>,
 }
 
@@ -66,31 +64,151 @@ impl Registry {
     }
 
     /// Adds a command. Fails with `CommandError::Duplicate` if the name is taken.
-    // TODO(#10): implement, then remove the `allow`.
-    #[allow(unused_variables)]
     pub fn register(&mut self, command: Command) -> Result<(), CommandError> {
-        todo!()
+        match self.commands.entry(command.name.clone()) {
+            Entry::Occupied(_) => Err(CommandError::Duplicate(command.name)),
+            Entry::Vacant(slot) => {
+                slot.insert(command);
+                Ok(())
+            }
+        }
     }
 
     /// Looks a command up by name.
-    // TODO(#10): implement, then remove the `allow`.
-    #[allow(unused_variables)]
     pub fn get(&self, name: &str) -> Option<&Command> {
-        todo!()
+        self.commands.get(name)
     }
 
     /// Validates `params` against the command's schema and runs it.
-    /// Never panics: an unknown name or bad parameters come back as errors.
-    // TODO(#10): implement, then remove the `allow`.
-    #[allow(unused_variables)]
     pub fn run(&self, name: &str, params: Value) -> Result<CommandOutput, CommandError> {
-        todo!()
+        let command = self
+            .get(name)
+            .ok_or_else(|| CommandError::NotFound(name.to_string()))?;
+        validate_params(&command.params_schema, &params)?;
+        (command.handler)(params)
     }
 }
 
 /// Checks `params` against a JSON Schema.
-// TODO(#10): implement, then remove the `allow`.
-#[allow(unused_variables, dead_code)]
 fn validate_params(schema: &Value, params: &Value) -> Result<(), CommandError> {
-    todo!()
+    let validator = jsonschema::validator_for(schema)
+        .map_err(|e| CommandError::Failed(format!("invalid schema: {e}")))?;
+    validator
+        .validate(params)
+        .map_err(|e| CommandError::InvalidParams(e.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn greet_command() -> Command {
+        Command::new(
+            "greet",
+            "Greets someone by name",
+            json!({
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"],
+                "additionalProperties": false
+            }),
+            |params| {
+                let name = params["name"].as_str().unwrap_or_default();
+                Ok(CommandOutput {
+                    message: format!("Hello, {name}!"),
+                })
+            },
+        )
+    }
+
+    #[test]
+    fn registered_command_can_be_found_by_name() {
+        let mut registry = Registry::new();
+        registry.register(greet_command()).unwrap();
+
+        assert!(registry.get("greet").is_some());
+    }
+
+    #[test]
+    fn registering_a_duplicate_name_fails() {
+        let mut registry = Registry::new();
+        registry.register(greet_command()).unwrap();
+        assert_eq!(
+            registry.register(greet_command()),
+            Err(CommandError::Duplicate("greet".to_string()))
+        );
+    }
+
+    #[test]
+    fn getting_an_unknown_command_returns_none() {
+        let registry = Registry::new();
+        assert!(registry.get("none").is_none());
+    }
+
+    #[test]
+    fn running_an_unknown_command_returns_not_found() {
+        let registry = Registry::new();
+        assert_eq!(
+            registry.run("none", json!({})),
+            Err(CommandError::NotFound("none".to_string()))
+        );
+    }
+
+    #[test]
+    fn running_with_valid_params_calls_the_handler() {
+        let mut registry = Registry::new();
+        registry.register(greet_command()).unwrap();
+        let result = registry.run("greet", json!({"name": "Emanuel"})).unwrap();
+
+        assert_eq!(result.message, "Hello, Emanuel!");
+    }
+
+    #[test]
+    fn running_without_a_required_param_is_rejected() {
+        let mut registry = Registry::new();
+        registry.register(greet_command()).unwrap();
+
+        assert!(matches!(
+            registry.run("greet", json!({})),
+            Err(CommandError::InvalidParams(_))
+        ));
+    }
+
+    #[test]
+    fn running_with_a_wrong_param_type_is_rejected() {
+        let mut registry = Registry::new();
+        registry.register(greet_command()).unwrap();
+
+        assert!(matches!(
+            registry.run("greet", json!({"name": 42})),
+            Err(CommandError::InvalidParams(_))
+        ));
+    }
+
+    #[test]
+    fn a_broken_schema_returns_failed() {
+        let mut registry = Registry::new();
+        let broken = Command::new(
+            "broken",
+            "Has an invalid schema",
+            json!({"type": "not-a-real-type"}),
+            |_| {
+                Ok(CommandOutput {
+                    message: String::new(),
+                })
+            },
+        );
+
+        registry.register(broken).unwrap();
+        let result = registry.run("broken", json!({}));
+        assert!(matches!(result, Err(CommandError::Failed(_))))
+    }
+
+    fn assert_send_sync<T: Send + Sync>() {}
+
+    #[test]
+    fn registry_is_send_and_sync() {
+        assert_send_sync::<Registry>();
+    }
 }
