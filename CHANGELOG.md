@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Command registry: register commands by name, validate parameters against a JSON Schema and run them
+
 ## [0.1.0] - 2026-10-01
 
 ### Added
