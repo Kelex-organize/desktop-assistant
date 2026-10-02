@@ -79,3 +79,10 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Por qué:** los módulos van a necesitar compartir estado (base de datos, `AppHandle`), y un closure puede capturarlo, a diferencia de un puntero a función. El esquema es una única fuente de verdad: valida las llamadas ahora y se le enviará a la IA después. `thiserror` es lo idiomático para errores tipados en Rust.
 - **Por qué sin features por defecto:** `jsonschema` trae por defecto un cliente HTTP y TLS que no hacen falta, alargan la compilación y permitirían que un esquema descargue referencias de internet. Todo debe funcionar sin red.
 - **Alternativas:** puntero a función `fn(...)` (más simple, sin estado); validación a mano (sin dependencias, pero el esquema y la validación pueden desincronizarse); `impl Display` a mano para los errores.
+
+## 019 · Apps abribles: lista cerrada, fijas ahora y propias después
+- **Decisión:** `open_app { name }` busca el nombre en una lista cerrada y lanza el ejecutable directo con `std::process::Command`, sin shell. En M1 la lista es un `enum` (`KnownApp`) con tres apps del sistema: Calculadora, Bloc de notas y Explorador. Las apps y juegos propios del usuario (por ejemplo `lol`) se agregan en M2 (issue #21), guardadas en SQLite.
+- **Regla de seguridad:** agregar entradas a la lista de apps propias es una acción **solo de la interfaz**, nunca un comando del registro. Así ni el texto escrito ni la IA pueden registrar un destino nuevo; solo pueden elegir un alias que el usuario ya cargó.
+- **Por qué:** una lista cerrada evita inyección de comandos aunque el nombre venga de la IA (decisión 014). Dividir en dos etapas evita construir SQLite y la ventana principal antes de tiempo.
+- **Por qué `resolve` es una sola función:** es el punto donde más adelante se enchufa la lista del usuario, sin reescribir el resto.
+- **Alternativas:** una tabla `&[(&str, &str)]` (más compacta, pero el compilador no obliga a cubrir todos los casos); `tauri-plugin-opener` (sirve para abrir páginas, no para lanzar una app por nombre).
