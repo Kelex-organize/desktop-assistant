@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Command registry: register commands by name, validate parameters against a JSON Schema and run them
+- `open_app` command: open Calculator, Notepad or File Explorer by name, from a closed list and without a shell
 
 ## [0.1.0] - 2026-10-01
 
