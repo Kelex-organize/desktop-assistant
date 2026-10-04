@@ -15,6 +15,19 @@
         "title": "desktop-assistant",
         "width": 800,
         "height": 600
+      },
+      {
+        "label": "launcher",
+        "url": "launcher.html",
+        "title": "Kai",
+        "width": 640,
+        "height": 72,
+        "center": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "resizable": false,
+        "skipTaskbar": true,
+        "focus": true
       }
     ],
     "security": {
