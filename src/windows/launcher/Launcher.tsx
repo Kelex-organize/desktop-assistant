@@ -1,15 +1,38 @@
-import { useRef } from "react";
+import { useEffect, useRef, type KeyboardEvent } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 function Launcher() {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // TODO(#9): hide the window when Escape is pressed.
-  // TODO(#9): hide the window when it loses focus.
-  // TODO(#9): focus the input every time the window gets focus.
+  function hide(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") {
+      void getCurrentWindow().hide();
+    }
+  }
+
+  useEffect(() => {
+    const unlisten = getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+      if (focused) {
+        inputRef.current?.focus();
+      } else {
+        void getCurrentWindow().hide();
+      }
+    });
+
+    return () => {
+      void unlisten.then((fn) => fn());
+    };
+  }, []);
 
   return (
     <div className="launcher">
-      <input ref={inputRef} className="launcher-input" placeholder="¿Qué necesitás?" autoFocus />
+      <input
+        ref={inputRef}
+        className="launcher-input"
+        placeholder="¿Qué necesitás?"
+        autoFocus
+        onKeyDown={hide}
+      />
     </div>
   );
 }
