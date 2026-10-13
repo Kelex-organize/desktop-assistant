@@ -1,27 +1,112 @@
 use tauri::State;
 
-use crate::core::registry::{CommandError, Registry};
+use crate::core::{
+    provisional,
+    registry::{CommandError, Registry},
+};
 
 /// Runs what the user typed and returns the text to show in the launcher.
 ///
-/// `Ok` carries the confirmation, `Err` carries a message for the user (in Spanish).
+/// `Ok` carries the confirmation, `Err` carries a message for the user.
 /// Technical details are printed to the console, never shown in the launcher.
-// TODO(#12): implement, then remove the `allow`. You will need
-// `use crate::core::provisional;` (it has `interpret`).
-#[allow(unused_variables)]
 pub fn execute(registry: &Registry, text: &str) -> Result<String, String> {
-    todo!()
+    let call =
+        provisional::interpret(text).ok_or_else(|| "Type what you want to do".to_string())?;
+
+    registry
+        .run(&call.name, call.params)
+        .map(|output| output.message)
+        .map_err(|error| {
+            eprintln!("command `{}` failed: {error}", call.name);
+            user_message(&error)
+        })
 }
 
-/// Turns a command error into a message the user can read (Spanish).
-// TODO(#12): implement, then remove the `allow`.
-#[allow(unused_variables, dead_code)]
+/// Turns a command error into a message the user can read.
 fn user_message(error: &CommandError) -> String {
-    todo!()
+    match error {
+        CommandError::NotFound(name) => format!("I don't know how to \"{name}\""),
+        CommandError::InvalidParams(_) => "I didn't understand that".to_string(),
+        CommandError::Duplicate(_) => "Something went wrong inside Kai".to_string(),
+        CommandError::Failed(message) => message.clone(),
+    }
 }
 
 /// Tauri command called from the launcher when the user presses Enter.
 #[tauri::command]
 pub fn run_text(text: String, registry: State<'_, Registry>) -> Result<String, String> {
     execute(&registry, &text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::registry::{Command, CommandOutput};
+    use serde_json::json;
+
+    /// A fake `open_app` that opens nothing: it just echoes the name it receives.
+    fn registry_with_fake_open_app() -> Registry {
+        let mut registry = Registry::new();
+        registry
+            .register(Command::new(
+                "open_app",
+                "Fake open_app for tests",
+                json!({
+                    "type": "object",
+                    "properties": { "name": { "type": "string" } },
+                    "required": ["name"]
+                }),
+                |params| {
+                    let name = params["name"].as_str().unwrap_or_default();
+                    Ok(CommandOutput {
+                        message: format!("Running {name}"),
+                    })
+                },
+            ))
+            .unwrap();
+        registry
+    }
+
+    #[test]
+    fn executing_empty_text_asks_for_something() {
+        let registry = registry_with_fake_open_app();
+
+        let result = execute(&registry, "   ");
+
+        assert_eq!(result, Err("Type what you want to do".to_string()));
+    }
+
+    #[test]
+    fn executing_a_known_command_returns_its_message() {
+        let registry = registry_with_fake_open_app();
+
+        let result = execute(&registry, "  calc  ");
+
+        assert_eq!(result, Ok("Running calc".to_string()));
+    }
+
+    #[test]
+    fn executing_without_open_app_registered_returns_a_friendly_error() {
+        let registry = Registry::new();
+
+        let result = execute(&registry, "calc");
+
+        assert_eq!(result, Err("I don't know how to \"open_app\"".to_string()));
+    }
+
+    #[test]
+    fn failed_errors_show_their_own_message() {
+        let error = CommandError::Failed("Could not open the Calculator".to_string());
+
+        assert_eq!(user_message(&error), "Could not open the Calculator");
+    }
+
+    #[test]
+    fn other_errors_get_a_generic_message() {
+        let invalid = CommandError::InvalidParams("missing name".to_string());
+        let duplicate = CommandError::Duplicate("open_app".to_string());
+
+        assert_eq!(user_message(&invalid), "I didn't understand that");
+        assert_eq!(user_message(&duplicate), "Something went wrong inside Kai");
+    }
 }
