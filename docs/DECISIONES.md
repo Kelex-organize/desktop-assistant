@@ -116,3 +116,9 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Pendiente:** en qué idioma responde Kai con "buena onda" (saludos de M2, respuestas de la IA en M5). Se decide cuando existan; podría ser configurable.
 - **Idea futura:** internacionalizar con un catálogo de textos (una clave por mensaje y un archivo por idioma), si se quiere ofrecer varios idiomas.
 - **Alternativas:** mantener la interfaz en español (más cómodo para el dueño, pero reduce el alcance); internacionalizar desde ya con catálogo (más trabajo ahora sin necesidad todavía).
+
+## 024 · Icono en la bandeja: Kai vive ahí, y la ventana principal solo se oculta
+- **Decisión:** Kai tiene un icono en la bandeja del sistema con un menú de dos entradas (*Show* y *Quit*). El clic izquierdo sobre el icono muestra el launcher, igual que el atajo. Cerrar la ventana principal **no cierra la app**: la oculta. La única forma de terminarla es *Quit*.
+- **Por qué:** Kai tiene que quedarse corriendo en segundo plano para que el atajo, las alarmas (M2) y la voz (M3) funcionen con las ventanas cerradas. Sin bandeja, la única forma de cerrarla sería el administrador de tareas.
+- **Dónde vive la lógica:** en Rust (`tray.rs` y `windows.rs`). `show_launcher` es una función aparte de `toggle_launcher`: el icono siempre muestra, el atajo alterna.
+- **Alternativas:** que el clic izquierdo abra la ventana principal (tiene sentido cuando haya paneles, M2); no tener menú y dejar solo el clic.
