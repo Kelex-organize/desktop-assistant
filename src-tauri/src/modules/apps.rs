@@ -25,7 +25,7 @@ impl KnownApp {
         }
     }
 
-    /// Name shown to the user in confirmations (Spanish, user-facing).
+    /// Name shown to the user in confirmations.
     pub fn display_name(self) -> &'static str {
         match self {
             KnownApp::Calculator => "the Calculator",
@@ -55,9 +55,10 @@ pub fn resolve(name: &str) -> Option<KnownApp> {
 
 /// Launches an app. Never goes through a shell: the executable is started directly.
 fn launch(app: KnownApp) -> Result<(), CommandError> {
-    Process::new(app.executable())
-        .spawn()
-        .map_err(|e| CommandError::Failed(format!("could not start {}: {e}", app.executable())))?;
+    Process::new(app.executable()).spawn().map_err(|e| {
+        eprintln!("could not start {}: {e}", app.executable());
+        CommandError::Failed(format!("Could not open {}", app.display_name()))
+    })?;
     Ok(())
 }
 
@@ -66,8 +67,8 @@ fn open_app(params: Value) -> Result<CommandOutput, CommandError> {
     let name = params["name"]
         .as_str()
         .ok_or_else(|| CommandError::InvalidParams("missing \"name\"".to_string()))?;
-    let app =
-        resolve(name).ok_or_else(|| CommandError::Failed(format!("not found app \"{name}\"")))?;
+    let app = resolve(name)
+        .ok_or_else(|| CommandError::Failed(format!("I don't know an app called \"{name}\"")))?;
     launch(app)?;
     Ok(CommandOutput {
         message: format!("Running {}", app.display_name()),

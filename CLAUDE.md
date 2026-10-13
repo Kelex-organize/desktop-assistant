@@ -44,7 +44,7 @@ Seguí siempre `docs/FLUJO_DE_TRABAJO.md`: un issue por tarea, una rama por issu
 
 - **Código en inglés:** identificadores, comentarios, mensajes de commit, nombres de ramas, títulos de issues y PRs.
 - **Documentación del proyecto (`docs/`) en español.**
-- **Textos que ve el usuario en la app:** en español (más adelante, internacionalizables).
+- **Textos que ve el usuario en la app:** en inglés (más adelante, internacionalizables). Ver decisión 023.
 
 ## Stack
 
