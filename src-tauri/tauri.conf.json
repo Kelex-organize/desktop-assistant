@@ -21,7 +21,7 @@
         "url": "launcher.html",
         "title": "Kai",
         "width": 640,
-        "height": 72,
+        "height": 96,
         "center": true,
         "decorations": false,
         "alwaysOnTop": true,
