@@ -12,7 +12,9 @@ body,
 
 .launcher {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
   height: 100%;
   padding: 0 16px;
   box-sizing: border-box;
@@ -30,4 +32,15 @@ body,
 
 .launcher-input::placeholder {
   color: #71717a;
+}
+
+.launcher-message {
+  min-height: 18px;
+  margin: 0;
+  color: #a1a1aa;
+  font-size: 14px;
+}
+
+.launcher-message-error {
+  color: #f87171;
 }
