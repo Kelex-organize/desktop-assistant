@@ -1,17 +1,24 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { runText } from "../../lib/api";
 
 function Launcher() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
-  // TODO(#12): add the setters when you need them: `[message, setMessage]`, `[isError, setIsError]`.
-  const [message] = useState("");
-  const [isError] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
 
-  // TODO(#12): run `text` with `runText` (src/lib/api.ts), show the confirmation
-  // or the error in `message`, and hide the launcher on success.
   async function submit() {
-    throw new Error("TODO");
+    try {
+      const result = await runText(text);
+      setIsError(false);
+      setMessage(result);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      await getCurrentWindow().hide();
+    } catch (error) {
+      setIsError(true);
+      setMessage(typeof error === "string" ? error : "Something went wrong");
+    }
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -27,6 +34,9 @@ function Launcher() {
       if (focused) {
         inputRef.current?.focus();
       } else {
+        setText("");
+        setMessage("");
+        setIsError(false);
         void getCurrentWindow().hide();
       }
     });
@@ -35,8 +45,6 @@ function Launcher() {
       void unlisten.then((fn) => fn());
     };
   }, []);
-
-  // TODO(#12): clear `text` and `message` when the launcher is hidden.
 
   return (
     <div className="launcher">
