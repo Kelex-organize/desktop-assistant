@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, act, waitFor } from "@testing-library/react";
 import Launcher from "./Launcher";
 
 type FocusEvent = { payload: boolean };
@@ -36,8 +36,38 @@ describe("Launcher", () => {
     expect(tauri.hide).toHaveBeenCalledTimes(1);
   });
 
-  it.todo("does not hide the window when another key is pressed");
-  it.todo("hides the window when it loses focus");
-  it.todo("focuses the input when the window gets focus");
-  it.todo("stops listening for focus changes when it unmounts");
+  it("does not hide the window when another key is pressed", () => {
+    render(<Launcher />);
+
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "a" });
+
+    expect(tauri.hide).not.toHaveBeenCalled();
+  });
+
+  it("hides the window when it loses focus", () => {
+    render(<Launcher />);
+
+    act(() => tauri.emitFocus({ payload: false }));
+
+    expect(tauri.hide).toHaveBeenCalledTimes(1);
+  });
+
+  it("focuses the input when the window gets focus", () => {
+    render(<Launcher />);
+    const input = screen.getByRole("textbox");
+    input.blur();
+    expect(document.activeElement).not.toBe(input);
+
+    act(() => tauri.emitFocus({ payload: true }));
+
+    expect(document.activeElement).toBe(input);
+  });
+
+  it("stops listening for focus changes when it unmounts", async () => {
+    const { unmount } = render(<Launcher />);
+
+    unmount();
+
+    await waitFor(() => expect(tauri.unlisten).toHaveBeenCalledTimes(1));
+  });
 });
