@@ -105,6 +105,14 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Decisión:** hasta que exista el intérprete por reglas (M2), el launcher manda el texto a Rust (`run_text`), y una función aislada (`core/provisional.rs::interpret`) lo toma como el nombre de una app: `"calculadora"` pasa a `open_app { name: "calculadora" }`. El registro de comandos vive en el `State` de Tauri y se arma en el `setup`.
 - **Por qué:** permite cerrar el objetivo del hito M1 (atajo, escribir, Enter, se abre) sin adelantar el trait `Interpreter` ni el `RuleInterpreter`, que son de M2.
 - **Cómo se reemplaza:** `interpret` es lo único que M2 tiene que sustituir; ni el launcher ni `run_text` cambian.
-- **Convención de errores para el usuario:** `CommandOutput.message` y el texto de `CommandError::Failed` son mensajes legibles en español. Los demás errores se traducen a un texto genérico en español y el detalle técnico va a la consola.
+- **Convención de errores para el usuario:** `CommandOutput.message` y el texto de `CommandError::Failed` son mensajes legibles en inglés (decisión 023). Los demás errores se traducen a un texto genérico en inglés y el detalle técnico va a la consola.
 - **Qué hace el launcher después de ejecutar:** si salió bien, muestra la confirmación un instante y se oculta; si hubo un error, queda visible para poder leerlo.
 - **Alternativas:** que el launcher mande `{ command, params }` (el launcher tendría que conocer los comandos, justo lo que el intérprete debe ocultar); adelantar un `RuleInterpreter` mínimo (es de M2 y lo inflaría).
+
+## 023 · La interfaz de la app está en inglés
+- **Decisión:** los textos que ve el usuario (mensajes de confirmación y de error, *placeholders*, nombres mostrados) están en **inglés**. Reemplaza lo que decía `CLAUDE.md` ("en español").
+- **Por qué:** el repo va a ser público y la app puede usarla gente de cualquier lugar; el inglés llega a más personas. La documentación de `docs/` sigue en español (decisión 012).
+- **Lo que NO cambia:** los nombres que la app *entiende*. Los alias de los comandos aceptan español e inglés (`calculadora`, `calculator`), y la voz de M3 se podrá hablar en español.
+- **Pendiente:** en qué idioma responde Kai con "buena onda" (saludos de M2, respuestas de la IA en M5). Se decide cuando existan; podría ser configurable.
+- **Idea futura:** internacionalizar con un catálogo de textos (una clave por mensaje y un archivo por idioma), si se quiere ofrecer varios idiomas.
+- **Alternativas:** mantener la interfaz en español (más cómodo para el dueño, pero reduce el alcance); internacionalizar desde ya con catálogo (más trabajo ahora sin necesidad todavía).
