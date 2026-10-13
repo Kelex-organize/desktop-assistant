@@ -1,0 +1,33 @@
+:root {
+  font-family: system-ui, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.launcher {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+  background: #1e1e24;
+}
+
+.launcher-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #f4f4f5;
+  font-size: 22px;
+}
+
+.launcher-input::placeholder {
+  color: #71717a;
+}

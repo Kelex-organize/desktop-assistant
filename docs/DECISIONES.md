@@ -86,3 +86,9 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Por qué:** una lista cerrada evita inyección de comandos aunque el nombre venga de la IA (decisión 014). Dividir en dos etapas evita construir SQLite y la ventana principal antes de tiempo.
 - **Por qué `resolve` es una sola función:** es el punto donde más adelante se enchufa la lista del usuario, sin reescribir el resto.
 - **Alternativas:** una tabla `&[(&str, &str)]` (más compacta, pero el compilador no obliga a cubrir todos los casos); `tauri-plugin-opener` (sirve para abrir páginas, no para lanzar una app por nombre).
+
+## 020 · Una página por ventana, declaradas en la configuración
+- **Decisión:** cada ventana de Tauri tiene su propio `.html` y su propia carpeta en `src/windows/` (`launcher.html` → `src/windows/launcher/`). Vite arma una entrada por página. Las ventanas se declaran en `tauri.conf.json` y existen desde que arranca la app; después solo se muestran u ocultan. Cada ventana tiene su archivo de permisos en `src-tauri/capabilities/`.
+- **Por qué:** cada ventana carga solo lo suyo (el personaje, M4, será liviano y siempre visible); una ventana ya cargada aparece al instante al apretar el atajo; y los permisos mínimos por ventana evitan que una ventana pueda hacer lo que no necesita.
+- **Mientras no exista el atajo (#8):** el launcher arranca visible en desarrollo, y el #8 lo pasará a oculto por defecto.
+- **Alternativas:** una sola página con un *router* y un parámetro (menos configuración, pero todas las ventanas cargan todo el código); crear la ventana desde Rust al pedirla (más flexible, pero tarda en aparecer y es más código).
