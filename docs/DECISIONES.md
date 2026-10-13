@@ -92,3 +92,11 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Por qué:** cada ventana carga solo lo suyo (el personaje, M4, será liviano y siempre visible); una ventana ya cargada aparece al instante al apretar el atajo; y los permisos mínimos por ventana evitan que una ventana pueda hacer lo que no necesita.
 - **Mientras no exista el atajo (#8):** el launcher arranca visible en desarrollo, y el #8 lo pasará a oculto por defecto.
 - **Alternativas:** una sola página con un *router* y un parámetro (menos configuración, pero todas las ventanas cargan todo el código); crear la ventana desde Rust al pedirla (más flexible, pero tarda en aparecer y es más código).
+
+## 021 · Atajo global `Ctrl+Alt+K` manejado desde Rust
+- **Decisión:** el launcher se muestra y oculta con el atajo global `Ctrl+Alt+K`, registrado desde Rust con `tauri-plugin-global-shortcut`. La lógica de mostrar/ocultar vive en Rust (`windows.rs`), y el launcher arranca oculto.
+- **Por qué `Ctrl+Alt+K`:** casi nunca choca con otras apps ni con juegos (`Alt+Space` lo usa el menú de sistema de Windows, y `Ctrl+Space` muchos editores), y la `K` es de Kai. Es una constante en `shortcuts.rs`: cambiarlo es una línea.
+- **Por qué en Rust:** funciona aunque la ventana esté oculta y todavía no haya cargado su página (un atajo manejado desde React no llegaría), y es la regla de la decisión 007.
+- **Si el atajo está ocupado:** el error de registro se informa pero no tira abajo la app.
+- **Atajo configurable por el usuario:** no incluido; queda como idea futura.
+- **Alternativas:** `Alt+Space` (el clásico, pero choca en Windows); manejarlo desde React emitiendo un evento (más simple, pero no funciona con la ventana oculta).
