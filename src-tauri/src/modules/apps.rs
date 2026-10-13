@@ -25,7 +25,7 @@ impl KnownApp {
         }
     }
 
-    /// Name shown to the user in confirmations (Spanish, user-facing).
+    /// Name shown to the user in confirmations.
     pub fn display_name(self) -> &'static str {
         match self {
             KnownApp::Calculator => "the Calculator",

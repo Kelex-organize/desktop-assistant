@@ -43,7 +43,7 @@ function Launcher() {
       <input
         ref={inputRef}
         className="launcher-input"
-        placeholder="¿Qué necesitás?"
+        placeholder="What do you need?"
         autoFocus
         value={text}
         onChange={(e) => setText(e.target.value)}
