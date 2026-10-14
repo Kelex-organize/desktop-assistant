@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Launcher window: borderless, centered, always-on-top bar that hides on Escape or when it loses focus
 - Global shortcut `Ctrl+Alt+K` to show or hide the launcher from any app
 - Run what is typed in the launcher: the text is sent to Rust, executed as a command and the result (or an error) is shown in the bar
+- Tray icon with a Show/Quit menu; closing the main window keeps Kai running in the tray
 
 ## [0.1.0] - 2026-10-01
 
