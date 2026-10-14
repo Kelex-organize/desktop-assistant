@@ -1,5 +1,6 @@
 use std::collections::{hash_map::Entry, HashMap};
 
+use jsonschema::Validator;
 use serde_json::Value;
 use thiserror::Error;
 
@@ -52,6 +53,14 @@ impl Command {
     }
 }
 
+/// A command stored in the registry, with its parameter schema already compiled.
+// TODO(#20): use this as the value type of `Registry::commands`, then remove the `allow`.
+#[allow(dead_code)]
+struct Registered {
+    command: Command,
+    validator: Validator,
+}
+
 /// Central list of commands, indexed by name.
 #[derive(Default)]
 pub struct Registry {
@@ -87,6 +96,16 @@ impl Registry {
         validate_params(&command.params_schema, &params)?;
         (command.handler)(params)
     }
+}
+
+/// Compiles a JSON Schema into a validator that can be reused on every call.
+///
+/// An invalid schema is a bug of whoever registers the command, so it is a
+/// `CommandError::Failed`, not `InvalidParams`.
+// TODO(#20): implement, then remove the `allow`.
+#[allow(unused_variables, dead_code)]
+fn compile_schema(schema: &Value) -> Result<Validator, CommandError> {
+    todo!()
 }
 
 /// Checks `params` against a JSON Schema.
