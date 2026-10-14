@@ -2,6 +2,7 @@ pub mod commands;
 pub mod core;
 pub mod modules;
 pub mod shortcuts;
+pub mod tray;
 pub mod windows;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -25,7 +26,15 @@ pub fn run() {
             if let Err(error) = shortcuts::register(app.handle()) {
                 eprintln!("could not register global shortcuts: {error}");
             }
+            if let Err(error) = tray::setup(app.handle()) {
+                eprintln!("could not create the tray icon: {error}");
+            }
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                windows::keep_main_window_alive(window, event);
+            }
         })
         .invoke_handler(tauri::generate_handler![greet, commands::run_text])
         .run(tauri::generate_context!())
