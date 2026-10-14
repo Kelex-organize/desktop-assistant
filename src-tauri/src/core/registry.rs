@@ -54,8 +54,6 @@ impl Command {
 }
 
 /// A command stored in the registry, with its parameter schema already compiled.
-// TODO(#20): use this as the value type of `Registry::commands`, then remove the `allow`.
-#[allow(dead_code)]
 struct Registered {
     command: Command,
     validator: Validator,
@@ -64,7 +62,7 @@ struct Registered {
 /// Central list of commands, indexed by name.
 #[derive(Default)]
 pub struct Registry {
-    commands: HashMap<String, Command>,
+    commands: HashMap<String, Registered>,
 }
 
 impl Registry {
@@ -72,12 +70,14 @@ impl Registry {
         Self::default()
     }
 
-    /// Adds a command. Fails with `CommandError::Duplicate` if the name is taken.
+    /// Adds a command. Fails with `CommandError::Duplicate` if the name is taken, and
+    /// with `CommandError::Failed` if its parameter schema is not a valid JSON Schema.
     pub fn register(&mut self, command: Command) -> Result<(), CommandError> {
+        let validator = compile_schema(&command.params_schema)?;
         match self.commands.entry(command.name.clone()) {
             Entry::Occupied(_) => Err(CommandError::Duplicate(command.name)),
             Entry::Vacant(slot) => {
-                slot.insert(command);
+                slot.insert(Registered { command, validator });
                 Ok(())
             }
         }
@@ -85,36 +85,30 @@ impl Registry {
 
     /// Looks a command up by name.
     pub fn get(&self, name: &str) -> Option<&Command> {
-        self.commands.get(name)
+        self.commands
+            .get(name)
+            .map(|registered| &registered.command)
     }
 
     /// Validates `params` against the command's schema and runs it.
     pub fn run(&self, name: &str, params: Value) -> Result<CommandOutput, CommandError> {
-        let command = self
+        let registered = self
+            .commands
             .get(name)
             .ok_or_else(|| CommandError::NotFound(name.to_string()))?;
-        validate_params(&command.params_schema, &params)?;
-        (command.handler)(params)
+        registered
+            .validator
+            .validate(&params)
+            .map_err(|e| CommandError::InvalidParams(e.to_string()))?;
+
+        (registered.command.handler)(params)
     }
 }
 
 /// Compiles a JSON Schema into a validator that can be reused on every call.
-///
-/// An invalid schema is a bug of whoever registers the command, so it is a
-/// `CommandError::Failed`, not `InvalidParams`.
-// TODO(#20): implement, then remove the `allow`.
-#[allow(unused_variables, dead_code)]
 fn compile_schema(schema: &Value) -> Result<Validator, CommandError> {
-    todo!()
-}
-
-/// Checks `params` against a JSON Schema.
-fn validate_params(schema: &Value, params: &Value) -> Result<(), CommandError> {
-    let validator = jsonschema::validator_for(schema)
-        .map_err(|e| CommandError::Failed(format!("invalid schema: {e}")))?;
-    validator
-        .validate(params)
-        .map_err(|e| CommandError::InvalidParams(e.to_string()))
+    jsonschema::validator_for(schema)
+        .map_err(|e| CommandError::Failed(format!("invalid schema: {e}")))
 }
 
 #[cfg(test)]
@@ -206,7 +200,7 @@ mod tests {
     }
 
     #[test]
-    fn a_broken_schema_returns_failed() {
+    fn registering_a_broken_schema_fails_and_registers_nothing() {
         let mut registry = Registry::new();
         let broken = Command::new(
             "broken",
@@ -219,9 +213,12 @@ mod tests {
             },
         );
 
-        registry.register(broken).unwrap();
-        let result = registry.run("broken", json!({}));
-        assert!(matches!(result, Err(CommandError::Failed(_))))
+        let result = registry.register(broken);
+        assert!(matches!(result, Err(CommandError::Failed(_))));
+        assert!(matches!(
+            registry.run("broken", json!({})),
+            Err(CommandError::NotFound(_))
+        ));
     }
 
     fn assert_send_sync<T: Send + Sync>() {}
