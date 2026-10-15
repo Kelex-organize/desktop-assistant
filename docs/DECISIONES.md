@@ -128,3 +128,11 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Por qué:** un esquema roto es un bug de quien registra el comando, y conviene que aparezca al arrancar la app (donde se ve) y no la primera vez que alguien lo usa. Además evita recompilar el mismo esquema en cada llamada.
 - **Por qué dentro del registro y no dentro de `Command`:** no cambia la firma de `Command::new` ni el código de los módulos; el único cambio es interno. El criterio ("`register` falla con un esquema inválido") ya está en el tipo de retorno de `register`.
 - **Alternativa:** que `Command::new` devuelva un `Result` y lleve el validador adentro (falla un poco antes, pero obliga a tocar a todos los que construyen comandos).
+
+## 026 · Intérprete por reglas: una función por regla, y el texto suelto como último recurso
+- **Decisión:** el trait `Interpreter` (con `Intent`, `CommandCall` y un `Context` vacío) reemplaza al puente provisorio. `RuleInterpreter` guarda una lista de reglas, cada una una función `fn(&str) -> Option<CommandCall>`, y las prueba en orden: la primera que entiende la frase gana. Las reglas específicas van primero y la más general, último.
+- **Texto que ninguna regla específica reconoce:** se toma como el nombre de una app (el comportamiento de M1), para no romper lo que ya funciona. Se quita cuando exista el índice de apps instaladas.
+- **Por qué una función por regla y no `regex`:** se ve cada paso, no suma dependencias, y cada módulo futuro (`tft`, `media`, `alarms`) aporta su propia función de reglas. Es además el lugar donde practicar el manejo de texto en Rust.
+- **Por qué `Intent` tiene `commands` (una lista) y `reply`:** es lo que ya definía `ARQUITECTURA.md`; permite saludos (solo respuesta) y pedidos de varios pasos sin rediseñar.
+- **El intérprete vive en el estado de Tauri** como `Box<dyn Interpreter>`, así `execute` no sabe qué implementación usa: las de IA (M5, M6) se enchufan igual.
+- **Alternativas:** una tabla de expresiones regulares (compacta pero opaca, y una dependencia más); exigir un verbo (más limpio, pero rompe el flujo de M1).

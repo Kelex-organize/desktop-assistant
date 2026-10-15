@@ -1,13 +1,6 @@
-use serde_json::{json, Value};
+use serde_json::json;
 
-/// A command to run: its name in the registry and its parameters.
-///
-/// Provisional: M2 introduces the real `Intent`/`CommandCall` types.
-#[derive(Debug, Clone, PartialEq)]
-pub struct CommandCall {
-    pub name: String,
-    pub params: Value,
-}
+use crate::core::intent::CommandCall;
 
 /// Turns what the user typed into a command to run.
 ///
