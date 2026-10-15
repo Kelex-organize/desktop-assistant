@@ -2,7 +2,7 @@
 
 A desktop assistant for Windows that does everyday chores for you: open apps, set alarms and reminders, take notes, control Spotify, jump to pages like MetaTFT. You ask by typing in a Spotlight-style bar or, soon, by voice.
 
-> **Status: early development.** The project skeleton, tooling and CI are in place; the assistant itself is not usable yet. See the [roadmap](docs/ROADMAP.md).
+> **Status: early development.** Kai can already open Calculator, Notepad and File Explorer from a Spotlight-style bar: press `Ctrl+Alt+K`, type `calculadora` and press Enter. Alarms, notes, music controls and voice are next. See the [roadmap](docs/ROADMAP.md).
 
 ## What Kai is (and is not)
 
@@ -10,12 +10,19 @@ Kai is **not a chat app**. There is no conversation window. You ask for somethin
 
 AI will come later, and only as an *interpreter*: it turns what you type or say into app commands. Everything works without AI and without internet.
 
-## Planned features
+## Features
 
-- **Quick bar:** a global shortcut opens a Spotlight-style input
+Available today:
+
+- **Quick bar:** `Ctrl+Alt+K` shows or hides a Spotlight-style input
+- **Open apps:** Calculator, Notepad and File Explorer, by name (a closed list, never a shell)
+- **Tray icon:** Kai keeps running in the background; Quit from the tray menu
+
+Planned:
+
 - **Alarms and reminders** that ring even when the window is closed
 - **Notes:** create, list, search
-- **Open any installed app**
+- **Open any installed app**, including your own aliases for games
 - **Basic Spotify control:** play/pause, next, previous
 - **Shortcuts to web pages**, for example `items de Caitlyn` opens MetaTFT
 - **Voice commands** with push-to-talk
