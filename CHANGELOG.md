@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-15
+
 ### Added
 
 - Command registry: register commands by name, validate parameters against a JSON Schema and run them
@@ -28,5 +30,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - README
 - MIT license
 
-[Unreleased]: https://github.com/Kelex-organize/desktop-assistant/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Kelex-organize/desktop-assistant/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Kelex-organize/desktop-assistant/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Kelex-organize/desktop-assistant/releases/tag/v0.1.0
