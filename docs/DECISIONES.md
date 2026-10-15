@@ -122,3 +122,9 @@ Formato: **Contexto** (qué problema había) · **Decisión** · **Por qué** ·
 - **Por qué:** Kai tiene que quedarse corriendo en segundo plano para que el atajo, las alarmas (M2) y la voz (M3) funcionen con las ventanas cerradas. Sin bandeja, la única forma de cerrarla sería el administrador de tareas.
 - **Dónde vive la lógica:** en Rust (`tray.rs` y `windows.rs`). `show_launcher` es una función aparte de `toggle_launcher`: el icono siempre muestra, el atajo alterna.
 - **Alternativas:** que el clic izquierdo abra la ventana principal (tiene sentido cuando haya paneles, M2); no tener menú y dejar solo el clic.
+
+## 025 · El esquema de un comando se compila una sola vez, al registrarlo
+- **Decisión:** `Registry::register` compila el esquema de parámetros del comando y guarda el validador ya compilado junto al comando (un tipo interno `Registered`). Si el esquema es inválido, `register` devuelve `CommandError::Failed` y el comando no queda registrado. `run` solo valida contra el validador guardado.
+- **Por qué:** un esquema roto es un bug de quien registra el comando, y conviene que aparezca al arrancar la app (donde se ve) y no la primera vez que alguien lo usa. Además evita recompilar el mismo esquema en cada llamada.
+- **Por qué dentro del registro y no dentro de `Command`:** no cambia la firma de `Command::new` ni el código de los módulos; el único cambio es interno. El criterio ("`register` falla con un esquema inválido") ya está en el tipo de retorno de `register`.
+- **Alternativa:** que `Command::new` devuelva un `Result` y lleve el validador adentro (falla un poco antes, pero obliga a tocar a todos los que construyen comandos).
