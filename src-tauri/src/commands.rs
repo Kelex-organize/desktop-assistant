@@ -1,25 +1,39 @@
 use tauri::State;
 
-use crate::core::{
-    provisional,
-    registry::{CommandError, Registry},
-};
+use crate::core::intent::Context;
+use crate::core::interpreter::{InterpretError, Interpreter};
+use crate::core::registry::{CommandError, Registry};
 
 /// Runs what the user typed and returns the text to show in the launcher.
 ///
 /// `Ok` carries the confirmation, `Err` carries a message for the user.
 /// Technical details are printed to the console, never shown in the launcher.
-pub fn execute(registry: &Registry, text: &str) -> Result<String, String> {
-    let call =
-        provisional::interpret(text).ok_or_else(|| "Type what you want to do".to_string())?;
+pub fn execute(
+    registry: &Registry,
+    interpreter: &dyn Interpreter,
+    text: &str,
+) -> Result<String, String> {
+    let intent = interpreter
+        .interpret(text, &Context::default())
+        .map_err(|error| interpret_message(&error))?;
 
-    registry
-        .run(&call.name, call.params)
-        .map(|output| output.message)
-        .map_err(|error| {
+    let mut messages = Vec::new();
+    for call in intent.commands {
+        let output = registry.run(&call.name, call.params).map_err(|error| {
             eprintln!("command `{}` failed: {error}", call.name);
             user_message(&error)
-        })
+        })?;
+        messages.push(output.message);
+    }
+
+    Ok(messages.join(" · "))
+}
+
+fn interpret_message(error: &InterpretError) -> String {
+    match error {
+        InterpretError::EmptyInput => "Type what you want to do".to_string(),
+        InterpretError::NotUnderstood => "I didn't understand that".to_string(),
+    }
 }
 
 /// Turns a command error into a message the user can read.
@@ -34,15 +48,38 @@ fn user_message(error: &CommandError) -> String {
 
 /// Tauri command called from the launcher when the user presses Enter.
 #[tauri::command]
-pub fn run_text(text: String, registry: State<'_, Registry>) -> Result<String, String> {
-    execute(&registry, &text)
+pub fn run_text(
+    text: String,
+    registry: State<'_, Registry>,
+    interpreter: State<'_, Box<dyn Interpreter>>,
+) -> Result<String, String> {
+    execute(&registry, interpreter.inner().as_ref(), &text)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::registry::{Command, CommandOutput};
+    use crate::core::{
+        intent::{CommandCall, Intent},
+        interpreter::rules::RuleInterpreter,
+        registry::{Command, CommandOutput},
+    };
     use serde_json::json;
+
+    struct FakeInterpreter(Result<Intent, InterpretError>);
+
+    impl Interpreter for FakeInterpreter {
+        fn interpret(&self, _text: &str, _context: &Context) -> Result<Intent, InterpretError> {
+            self.0.clone()
+        }
+    }
+
+    fn open_app_call(name: &str) -> CommandCall {
+        CommandCall {
+            name: "open_app".to_string(),
+            params: json!({ "name": name }),
+        }
+    }
 
     /// A fake `open_app` that opens nothing: it just echoes the name it receives.
     fn registry_with_fake_open_app() -> Registry {
@@ -71,7 +108,7 @@ mod tests {
     fn executing_empty_text_asks_for_something() {
         let registry = registry_with_fake_open_app();
 
-        let result = execute(&registry, "   ");
+        let result = execute(&registry, &RuleInterpreter::new(), "   ");
 
         assert_eq!(result, Err("Type what you want to do".to_string()));
     }
@@ -80,7 +117,7 @@ mod tests {
     fn executing_a_known_command_returns_its_message() {
         let registry = registry_with_fake_open_app();
 
-        let result = execute(&registry, "  calc  ");
+        let result = execute(&registry, &RuleInterpreter::new(), "  calc  ");
 
         assert_eq!(result, Ok("Running calc".to_string()));
     }
@@ -89,7 +126,7 @@ mod tests {
     fn executing_without_open_app_registered_returns_a_friendly_error() {
         let registry = Registry::new();
 
-        let result = execute(&registry, "calc");
+        let result = execute(&registry, &RuleInterpreter::new(), "calc");
 
         assert_eq!(result, Err("I don't know how to \"open_app\"".to_string()));
     }
@@ -108,5 +145,28 @@ mod tests {
 
         assert_eq!(user_message(&invalid), "I didn't understand that");
         assert_eq!(user_message(&duplicate), "Something went wrong inside Kai");
+    }
+
+    #[test]
+    fn an_interpreter_that_understands_nothing_gives_a_friendly_error() {
+        let registry = registry_with_fake_open_app();
+        let interpreter = FakeInterpreter(Err(InterpretError::NotUnderstood));
+
+        let result = execute(&registry, &interpreter, "whatever");
+
+        assert_eq!(result, Err("I didn't understand that".to_string()));
+    }
+
+    #[test]
+    fn several_commands_run_in_order_and_join_their_messages() {
+        let registry = registry_with_fake_open_app();
+        let interpreter = FakeInterpreter(Ok(Intent {
+            commands: vec![open_app_call("one"), open_app_call("two")],
+            reply: None,
+        }));
+
+        let result = execute(&registry, &interpreter, "whatever");
+
+        assert_eq!(result, Ok("Running one · Running two".to_string()));
     }
 }

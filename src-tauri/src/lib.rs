@@ -23,6 +23,10 @@ pub fn run() {
             modules::apps::register(&mut registry)?;
             app.manage(registry);
 
+            app.manage::<Box<dyn core::interpreter::Interpreter>>(Box::new(
+                core::interpreter::rules::RuleInterpreter::new(),
+            ));
+
             if let Err(error) = shortcuts::register(app.handle()) {
                 eprintln!("could not register global shortcuts: {error}");
             }
