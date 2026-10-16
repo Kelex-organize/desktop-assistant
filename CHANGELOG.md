@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Rule-based interpreter: phrases like "abrí calculadora" or "open notepad" open the app, and plain app names still work
+
 ## [0.2.0] - 2026-10-15
 
 ### Added
