@@ -5,10 +5,12 @@ use crate::core::intent::{Context, Intent};
 pub mod rules;
 
 /// Why a text could not be turned into an `Intent`.
-#[derive(Debug, Error, PartialEq, Eq)]
+#[derive(Debug, Error, PartialEq, Eq, Clone)]
 pub enum InterpretError {
     #[error("there is nothing to interpret")]
     EmptyInput,
+    #[error("the text can't be interpreted")]
+    NotUnderstood,
 }
 
 /// Turns what the user typed or said into an `Intent`.
